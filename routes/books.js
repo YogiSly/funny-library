@@ -2,10 +2,11 @@ import express from "express";
 import { stor } from "../storage/books.js";
 import { Book } from "../classes/book.js";
 import bodyParser from "body-parser";
+import { error404 } from "../middleware/err-404.js";
+import { fileStor } from "../middleware/file.js";
 
 export const booksRouter = express.Router()
 booksRouter.use(bodyParser.json())
-
 
 booksRouter.get('/', (req, res) => {
   const { books } = stor;
@@ -19,13 +20,13 @@ booksRouter.get('/:id', (req, res) => {
   if (idx !== -1) {
     res.json(books[idx]);
   } else {
-    res.status(404);
-    res.json('Code: 404');
+    error404(req, res)
   }
 })
-booksRouter.post('/', (req, res) => {
+booksRouter.post('/', fileStor.single('img-upload'), (req, res) => {
   const { books } = stor;
-  const { title, description, authors, favorite, fileCover, fileName } = req.body
+  const { title, description, authors, favorite, fileCover } = req.body
+  const fileName = req.file.filename
   const newBook = new Book(title, description, authors, favorite, fileCover, fileName);
   books.push(newBook);
   res.status(201);
@@ -42,8 +43,7 @@ booksRouter.put('/:id', (req, res) => {
     }
     res.json(books[id])
   } else {
-    res.status(404);
-    res.json('Code: 404');
+    error404(req, res)
   }
 });
 booksRouter.delete('/:id', (req, res) => {
@@ -52,10 +52,9 @@ booksRouter.delete('/:id', (req, res) => {
   const idx = books.findIndex(el => el.id === id);
   if (idx !== -1) {
     books.splice(idx, 1)
-    res.json('ok')
+    res.json({ status: 200, msg: "ok" })
   } else {
-    res.status(404);
-    res.json('Code: 404');
+    error404(req, res)
   }
 });
 
