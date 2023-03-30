@@ -4,6 +4,8 @@ import { Book } from "../classes/book.js";
 import bodyParser from "body-parser";
 import { error404 } from "../middleware/err-404.js";
 import { fileStor } from "../middleware/file.js";
+import { URL } from 'url';
+import path from "node:path";
 
 export const booksRouter = express.Router()
 booksRouter.use(bodyParser.json())
@@ -57,4 +59,16 @@ booksRouter.delete('/:id', (req, res) => {
     error404(req, res)
   }
 });
+booksRouter.get('/:id/download', (req, res) => {
+  const __dirname = new URL('.', import.meta.url).pathname;
+  const { books } = stor;
+  const { id } = req.params;
+  const idx = books.findIndex(el => el.id === id);
+  const filePath = path.join(__dirname.slice(1), '..', 'public', 'img', books[idx].fileName)
+  if (idx !== -1) {
+    res.download(filePath);
+  } else {
+    error404(req, res)
+  }
+})
 
