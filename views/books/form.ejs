@@ -22,6 +22,9 @@
 
   <div class="form-group">
     <label for="inputFileCover">Обложка</label>
+    <% if (books.fileCover) { %>
+      <p><%= books.fileCover %></p>
+    <% }  %>
     <input type="file" value="<%= books.fileCover %>" name="fileCover" class="form-control-file" id="inputFileCover">
   </div>
 
@@ -32,6 +35,9 @@
 
   <div class="form-group">
     <label for="inputFileBook">Книга</label>
+    <% if (books.fileBook) { %>
+      <p><%= books.fileBook %></p>
+    <% }  %>
     <input type="file" value="<%= books.fileBook %>" name="fileBook" class="form-control-file" id="inputFileBook">
   </div>
 

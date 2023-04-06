@@ -2,7 +2,6 @@ import express from "express";
 import { stor } from "../storage/books.js";
 import { Book } from "../classes/book.js";
 import bodyParser from "body-parser";
-import { error404 } from "../middleware/err-404.js";
 import { fileStor } from "../middleware/file.js";
 import path from "node:path";
 
@@ -43,8 +42,6 @@ booksRouter.get('/:id', (req, res) => {
   const idx = books.findIndex(el => el.id === id);
   if (idx === -1) {
     res.redirect('/404');
-  } else {
-    error404(req, res)
   }
   res.render("books/view.ejs", {
     title: "Books | view",
@@ -58,8 +55,6 @@ booksRouter.get('/update/:id', (req, res) => {
   const idx = books.findIndex(el => el.id === id);
   if (idx === -1) {
     res.redirect('/404');
-  } else {
-    error404(req, res)
   }
   res.render("books/update.ejs", {
     title: "Books | view",
@@ -74,8 +69,6 @@ booksRouter.post('/update/:id', (req, res) => {
   const idx = books.findIndex(el => el.id === id);
   if (idx === -1) {
     res.redirect('/404');
-  } else {
-    error404(req, res)
   }
   books[idx] = {
     ...books[idx],
@@ -90,8 +83,6 @@ booksRouter.post('/delete/:id', (req, res) => {
   const idx = books.findIndex(el => el.id === id);
   if (idx === -1) {
     res.redirect('/404');
-  } else {
-    error404(req, res)
   }
   books.splice(idx, 1);
   res.redirect(`/books`);
