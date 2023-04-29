@@ -36,6 +36,10 @@
                             <a href="<%= books.fileBook %>"><%= books.fileName %></a>
                             
                         </p>
+                        <p class="card-text">
+                            <b>Просмотры:</b>
+                            <%= books.views %>
+                        </p>
                         <div class="text-right">
                             <a class="btn btn-sm btn-primary" href="/books/update/<%= books.id %>">
                                 <i class="fa fa-pencil" aria-hidden="true"></i>

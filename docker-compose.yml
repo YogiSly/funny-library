@@ -1,0 +1,48 @@
+services:
+  storage:
+    image: redis
+    container_name: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - ./data:/data
+    networks:
+      - network
+  library:
+    image: node:18
+    container_name: library
+    build:
+      context: .
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - PORT=3000
+    ports:
+      - 3000:3000
+    depends_on:
+      - storage
+    command: sh -c "yarn && yarn server"
+    networks:
+      - network
+  counter:  
+    image: node:18
+    container_name: counter
+    build:
+      context: .
+    working_dir: /app2
+    volumes:
+    - ./:/app2
+    environment:
+    - PORT=3001
+    - REDIS_URL=redis://storage:6379
+    ports:
+      - 3001:3001
+    depends_on:
+    - storage
+    command: sh -c "yarn add redis && yarn counter"
+    networks:
+      - network
+networks:
+  network: 
+    driver: bridge
