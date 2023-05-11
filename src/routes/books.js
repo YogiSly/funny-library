@@ -1,24 +1,24 @@
 import express from "express";
 import { stor } from "../storage/books.js";
-import { Book } from "../classes/book.js";
-import bodyParser from "body-parser";
 import { fileStor } from "../middleware/file.js";
 import path from "node:path";
-import axios from "axios";
+import Books from "../models/books.js";
 
-export const booksRouter = express.Router()
-booksRouter.use(bodyParser.json())
-booksRouter.use(bodyParser.urlencoded({ extended: true }));
+export const booksRouter = express.Router();
 
-booksRouter.get('/', (req, res) => {
-  const { books } = stor;
-  res.render("../src/views/books/index.ejs", {
-    title: "Books",
-    books: books
-  })
-})
+booksRouter.get("/", async (req, res) => {
+  try {
+    const books = await Books.find().select("-__v");
+    res.render("../src/views/books/index.ejs", {
+      title: "Books",
+      books: books,
+    });
+  } catch (error) {
+    res.redirect("/404");
+  }
+});
 
-booksRouter.get('/create', (req, res) => {
+booksRouter.get("/create", (req, res) => {
   const { books } = stor;
   res.render("../src/views/books/create.ejs", {
     title: "Books | create",
@@ -26,80 +26,100 @@ booksRouter.get('/create', (req, res) => {
   });
 });
 
-booksRouter.post('/create', fileStor.fields([{ name: 'fileCover', maxCount: 1 }, { name: 'fileBook', maxCount: 1 }])
-  , (req, res) => {
-    const { books } = stor;
+booksRouter.post(
+  "/create",
+  fileStor.fields([
+    { name: "fileCover", maxCount: 1 },
+    { name: "fileBook", maxCount: 1 },
+  ]),
+  async (req, res) => {
     const { title, description, authors, favorite, fileName } = req.body;
-    const fileCover = path.join('..', req.files['fileCover'][0]?.path)
-    const fileBook = path.join('..', req.files['fileBook'][0]?.path)
-    const newBook = new Book(title, description, authors, favorite, fileCover, fileName, fileBook);
-    books.push(newBook);
-    res.redirect('/books')
-  });
-
-booksRouter.get('/:id', async (req, res) => {
-  const { books } = stor;
-  const { id } = req.params;
-  const idx = books.findIndex(el => el.id === id);
-  if (idx === -1) {
-    res.redirect('/404');
-  }
-  await axios.post(`http://counter:3001/counter/${id}/incr`,{
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      data:{
-      id
-      }
+    const fileCover = path.join("..", req.files["fileCover"][0]?.path);
+    const fileBook = path.join("..", req.files["fileBook"][0]?.path);
+    const newBooks = new Books({
+      title,
+      description,
+      authors,
+      favorite,
+      fileCover,
+      fileName,
+      fileBook,
     });
-  await axios.get(`http://counter:3001/counter/${id}`)
-  .then((resp)=>{
-    books[idx].views = resp.data;
-    return resp.data
-  })
-  res.render("../src/views/books/view.ejs", {
-    title: "Books | view",
-    books: books[idx],
-  });
-})
-
-booksRouter.get('/update/:id',  (req, res) => {
-  const { books } = stor;
-  const { id } = req.params;
-  const idx = books.findIndex(el => el.id === id);
-  if (idx === -1) {
-    res.redirect('/404');
+    try {
+      await newBooks.save();
+      res.redirect("/books");
+    } catch (error) {
+      res.redirect("/404");
+    }
   }
-  res.render("../src/views/books/update.ejs", {
-    title: "Books | view",
-    books: books[idx],
-  });
+);
+
+booksRouter.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const books = await Books.findById({ _id: id }).select("-__v");
+    console.log(books, id);
+    res.render("../src/views/books/view.ejs", {
+      title: "Books | view",
+      books: books,
+    });
+  } catch (error) {
+    res.redirect("/404");
+  }
 });
 
-booksRouter.post('/update/:id', (req, res) => {
-  const { books } = stor;
-  const { id } = req.params;
-  const { title, description, authors, favorite, fileCover, fileName, fileBook } = req.body;
-  const idx = books.findIndex(el => el.id === id);
-  if (idx === -1) {
-    res.redirect('/404');
-  }
-  books[idx] = {
-    ...books[idx],
-    title, description, authors, favorite, fileCover, fileName, fileBook
-  };
-  res.redirect(`/books/${id}`);
-});
+booksRouter.get(
+  "/update/:id",
 
-
-booksRouter.post('/delete/:id', (req, res) => {
-  const { books } = stor;
-  const { id } = req.params;
-  const idx = books.findIndex(el => el.id === id);
-  if (idx === -1) {
-    res.redirect('/404');
+  async (req, res) => {
+    const { id } = req.params;
+    try {
+      const books = await Books.findById({ _id: id }).select("-__v");
+      res.render("../src/views/books/update.ejs", {
+        title: "Books | view",
+        books: books,
+      });
+    } catch (error) {
+      res.redirect("/404");
+    }
   }
-  books.splice(idx, 1);
-  res.redirect(`/books`);
+);
+
+booksRouter.post(
+  "/update/:id",
+  fileStor.fields([
+    { name: "fileCover", maxCount: 1 },
+    { name: "fileBook", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      authors,
+      favorite,
+      fileCover,
+      fileName,
+      fileBook,
+    } = req.body;
+    try {
+      await Books.findByIdAndUpdate(
+        { _id: id },
+        { title, description, authors, favorite, fileCover, fileName, fileBook }
+      );
+      res.redirect(`/books/${id}`);
+    } catch (e) {
+      res.redirect("/404");
+    }
+  }
+);
+
+booksRouter.post("/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await Books.deleteOne({ _id: id });
+    res.redirect(`/books`);
+  } catch (e) {
+    res.redirect("/404");
+  }
 });
