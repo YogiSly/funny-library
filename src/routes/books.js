@@ -3,12 +3,14 @@ import { stor } from "../storage/books.js";
 import { fileStor } from "../middleware/file.js";
 import path from "node:path";
 import Books from "../models/books.js";
+import { container } from "../container.js";
 
 export const booksRouter = express.Router();
 
 booksRouter.get("/", async (req, res) => {
   try {
-    const books = await Books.find().select("-__v");
+    const service = container.get(BooksRepository);
+    const books = await service.find().select("-__v");
     res.render("../src/views/books/index.ejs", {
       title: "Books",
       books: books,
