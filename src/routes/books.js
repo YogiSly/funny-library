@@ -2,8 +2,11 @@ import express from "express";
 import { stor } from "../storage/books.js";
 import { fileStor } from "../middleware/file.js";
 import path from "node:path";
-import Books from "../models/books.js";
+import Books from "../books/books.js";
 import { container } from "../container.js";
+import { BooksRepository } from "../books/BooksRepository.js";
+
+console.log("Books", Books);
 
 export const booksRouter = express.Router();
 
