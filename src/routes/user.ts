@@ -1,5 +1,5 @@
 import express from "express";
-import { stor } from "../storage/user.js";
+import { stor } from "../storage/user";
 
 export const userRouter = express.Router()
 
