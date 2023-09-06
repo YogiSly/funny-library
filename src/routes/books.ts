@@ -3,9 +3,9 @@ import { Request } from "express";
 import { stor } from "../storage/books";
 import { fileStor } from "../middleware/file";
 import path from "node:path";
-import Books from "../books/books";
+import Books from "../books/books.model";
 import container from "../container";
-import { BooksRepository } from "../books/BooksRepository";
+import { BooksService } from "../books/BookService";
 
 interface FilesList {
   [fieldName: string]: Express.Multer.File[];
@@ -15,7 +15,7 @@ export const booksRouter = express.Router();
 
 booksRouter.get("/", async (req, res) => {
   try {
-    const service = container.get(BooksRepository);
+    const service = container.get(BooksService);
     const books = await service.find().select("-__v");
     res.render("../src/views/books/index.ejs", {
       title: "Books",
@@ -42,7 +42,7 @@ booksRouter.post(
   ]),
   async (req: Request, res) => {
     const { title, description, authors, favorite, fileName } = req.body;
-    const files = req.files as FilesList
+    const files = req.files as FilesList;
     const fileCover = path.join("..", files["fileCover"][0]?.path);
     const fileBook = path.join("..", files["fileBook"][0]?.path);
     const newBooks = new Books({
